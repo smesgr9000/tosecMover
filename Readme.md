@@ -10,11 +10,11 @@ You properly want a more suffisticated tool like [JRomManger](https://github.com
 The benefit of this it runs from the shell without ui.
 
 The current fixed destination structure is determened
-by the name tag of the Tosec Dat file e.g. `Acorn BBC - Games - \[ADL\]`
+by the name tag of the Tosec Dat file e.g. `Acorn BBC - Games - [ADL]`
 will create:
 
 ```
-Acorn BBC/Games - \[ADL\]/Game/Soccer Challenge (19xx)(Discovery)\[h 8-Bit\]\[ADFS\].adl
+Acorn BBC/Games - [ADL]/Game/Soccer Challenge (19xx)(Discovery)[h 8-Bit][ADFS].adl
 ```
 
 Currently the tool does **NOT** support:
@@ -36,5 +36,5 @@ python3 tosecMover.py --help
 License
 -------
 
-Under BSD-3clause see [LICENSE]
+Under BSD-3clause see [LICENSE](./LICENSE)
 
