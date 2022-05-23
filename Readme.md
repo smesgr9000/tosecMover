@@ -14,11 +14,16 @@ by the name tag of the Tosec Dat file e.g. `Acorn BBC - Games - [ADL]`
 will create:
 
 ```
-Acorn BBC/Games - [ADL]/Game/Soccer Challenge (19xx)(Discovery)[h 8-Bit][ADFS].adl
+Acorn BBC/Games - [ADL]/<game name>
+```
+
+If a game contains multiple files or ROMs the structure is:
+
+```
+Acorn BBC/Games - [ADL]/<game name>/<rom name>
 ```
 
 Currently the tool does **NOT** support:
-- DAT entries with more than one file per entry
 - not multithreaded
 - diagnostic could be improved
 - more flexible destination
