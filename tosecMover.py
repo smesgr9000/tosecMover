@@ -25,41 +25,55 @@ class Tosec:
             logging.error("TOSEC DAT path %s does not exists", cDim(tosecPath))
             return
         if not tosecPath.is_dir():
-            gameList = self.__readTosecFile(tosecPath)
+            romList = self.__readTosecFile(tosecPath)
         else:
-            gameList = dict()
+            romList = dict()
             for tosecEntry in tosecPath.iterdir():
                 if not tosecEntry.is_dir():
-                    newGameList = self.__readTosecFile(tosecEntry)
-                    for entryKey in newGameList.keys():
-                        entry = newGameList[entryKey]
-                        if entryKey in gameList:
-                            existingEntry = gameList[entryKey][0]
-                            logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s", cDim(existingEntry.header.name + "/" + existingEntry.name), cDim(entryKey), existingEntry.md5 == entry.md5, existingEntry.size == entry.size, cDim(entry.header.name + "/" + entry.name));
-                            if existingEntry.md5 == entry.md5 and existingEntry.size == entry.size and existingEntry.crc == entry.crc:
-                                gameList[entryKey].append(entry)
+                    newRomList = self.__readTosecFile(tosecEntry)
+                    for entryKey in newRomList.keys():
+                        rom = newRomList[entryKey]
+                        rom0 = rom[0]
+                        if entryKey in romList:
+                            existingEntry = romList[entryKey][0]
+                            logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s", cDim(existingEntry.game.header.name + "/" + existingEntry.name), cDim(entryKey), existingEntry.md5 == rom0.md5, existingEntry.size == rom0.size, cDim(rom0.game.header.name + "/" + rom0.name));
+                            if existingEntry.md5 == rom0.md5 and existingEntry.size == rom0.size and existingEntry.crc == rom0.crc:
+                                romList[entryKey].extend(rom)
                         else:
-                            gameList[entryKey] = [entry]
-        self.__matcher = Matcher(gameList)
-    
+                            romList[entryKey] = rom
+        self.__matcher = Matcher(romList)
+
     def __readTosecFile(self, tosecFile: Path) -> dict:
+        """
+        Reads a single TOSEC DAT file. Returns a dictonary of all ROM entries
+        of the DAT file. If a ROM is found several times in the DAT the complete 
+        game entry is skipped."""
+
         root = xml.etree.ElementTree.parse(tosecFile.as_posix()).getroot()
-        gameList = dict()
+        romList = dict()
+        gameList = []
         try:
             header = TosecHeader(root)
             for game in root.findall("game"):
                 try:
                     entry = TosecGameEntry(game, header);
-                    gameList[entry.sha1] = entry
+                    gameRomList = dict()
+                    for rom in entry.roms:
+                        if rom.sha1 in romList:
+                            raise InvalidTosecFileException("ROM with sha1 {} was already added".format(cDim(rom.sha1)))
+                        gameRomList[rom.sha1] = [rom]
+                    gameList.append(entry)
+                    romList.update(gameRomList)
                 except InvalidTosecFileException as exception:
                     logging.warning("TOSEC DAT file %s parser error. Entry skipped because: %s", cDim(tosecFile.as_posix()), exception)
-            logging.info("TOSEC DAT file %s loaded %s entries", cDim(tosecFile.as_posix()), len(gameList))
+            logging.info("TOSEC DAT file %s loaded %s entries with %s roms", cDim(tosecFile.as_posix()), len(gameList), len(romList))
             header.games = gameList
+            header.roms = romList
         except InvalidTosecFileException as exception:
             logging.warning("TOSEC DAT file %s parser error. File skipped because: %s", cDim(tosecFile.as_posix()), exception)
-        return gameList
+        return romList
 
-    def __scanOneFile(self, entry: Path, strategy: Strategy):
+    def __scanFile(self, entry: Path, strategy: Strategy):
         scan = ScanFile(entry)
         match = self.__matcher.findMatch(scan)
         if match is None:
@@ -67,18 +81,18 @@ class Tosec:
         else:
             strategy.doStrategyMatch(scan, match)
     
-    def __scanOneDirectory(self, listPath: list[Path], strategy: Strategy) -> list[Path]:
+    def __scanDirectory(self, listPath: list[Path], strategy: Strategy) -> list[Path]:
         foundDirectories = []
         for scanPath in listPath:
             if scanPath.is_dir() and not scanPath.is_symlink():
                 for entry in scanPath.iterdir():
                     if entry.is_file():
-                        self.__scanOneFile(entry, strategy)
+                        self.__scanFile(entry, strategy)
                     elif not scanPath.is_symlink():
                         logging.debug("add directory %s to list to scan", cDim(entry.as_posix()))
                         foundDirectories.append(entry)
             elif scanPath.is_file():
-                self.__scanOneFile(scanPath, strategy)
+                self.__scanFile(scanPath, strategy)
         return foundDirectories
     
     def scanDirectory(self, args: argparse.Namespace):
@@ -103,7 +117,7 @@ class Tosec:
         try:
             scanPaths = [scanPath]
             while len(scanPaths) > 0:
-                scanPaths = self.__scanOneDirectory(scanPaths, strategy)
+                scanPaths = self.__scanDirectory(scanPaths, strategy)
         finally:
             strategy.doFinal()
 

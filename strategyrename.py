@@ -4,22 +4,22 @@ from color import *
 from pathlib import Path
 from scanfile import ScanFile
 from strategy import Strategy
-from tosecdat import TosecGameEntry
+from tosecdat import TosecGameRom
 import logging
 
 class Matcher:
     """
-    Does Find a list of TOSEC game entries from the given game list 
-    and the passed file or None. Only accept matches with SHA1, MD5, size & CRC equal"""
+    Search files in in the given ROM list. May return a list of TOSEC rom entries matching
+    the file or None if no match could be found. Only accept matches with SHA1, MD5, size & CRC equal the TOSEC entry"""
     
-    def __init__(self, gameList: dict):
-        self.__gameList = gameList
+    def __init__(self, romList: dict):
+        self.__romList = romList
 
-    def findMatch(self, scanFile: ScanFile) -> list[TosecGameEntry]:
+    def findMatch(self, scanFile: ScanFile) -> list[TosecGameRom]:
         if scanFile.isLoaded:
-            if scanFile.sha1 in self.__gameList:
-                entry = self.__gameList[scanFile.sha1];
-                logging.debug("found file %s as game %s", cDim(scanFile.fileName.as_posix()), cDim(entry[0].name));
+            if scanFile.sha1 in self.__romList:
+                entry = self.__romList[scanFile.sha1];
+                logging.debug("found file %s as ROM %s", cDim(scanFile.fileName.as_posix()), cDim(entry[0].name));
                 if entry[0].isMatching(scanFile):
                     return entry
                 logging.error("file %s matching sha1 but not other values for entry %s", cDim(vars(scanFile)), cDim(vars(entry)))
@@ -40,51 +40,51 @@ class StrategyRename(Strategy):
         self.__destPath = destPath
         self.__matcher = matcher
     
-    def doStrategyMatch(self, scanFile: ScanFile, tosecEntry: list[TosecGameEntry]):
-        super().doStrategyMatch(scanFile, tosecEntry)
-        destFile = tosecEntry[0].getFileName(self.__destPath)
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]):
+        super().doStrategyMatch(scanFile, tosecRomMatches)
+        destFile = tosecRomMatches[0].getFileName(self.__destPath)
         self.createParentDirectories(destFile)
-        if self.renameOrDeleteFoundFile(scanFile, destFile, tosecEntry[0]):
-            for entry in tosecEntry[1:]:
-                otherDestFile = entry.getFileName(self.__destPath)
+        if self.renameOrDeleteFoundFile(scanFile, destFile, tosecRomMatches[0]):
+            for rom in tosecRomMatches[1:]:
+                otherDestFile = rom.getFileName(self.__destPath)
                 self.createParentDirectories(otherDestFile)
-                self.softLink(scanFile, otherDestFile, destFile, entry)
-        elif len(tosecEntry) > 1:
-            logging.warning("Other entries found for %s skipped due to previous error", cDim(tosecEntry[0].name))
+                self.softLink(scanFile, otherDestFile, destFile, rom)
+        elif len(tosecRomMatches) > 1:
+            logging.warning("Other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
 
     def createParentDirectories(self, destFile: Path):
         if not destFile.parent.exists():
             logging.debug("creating directory %s", cDim(destFile.parent.as_posix()))
             destFile.parent.mkdir(parents=True)
 
-    def softLink(self, scanFile: ScanFile, destFile: Path, linkTo: Path, tosecEntry: TosecGameEntry):
+    def softLink(self, scanFile: ScanFile, destFile: Path, linkTo: Path, tosecRomMatch: TosecGameRom):
         if destFile.is_symlink():
             destFile.unlink()
         if destFile.exists():
-            self.handleDestFound(scanFile, destFile, tosecEntry, False)
+            self.handleDestFound(scanFile, destFile, tosecRomMatch, False)
         else:
             logging.info("softlink file %s to %s", cDim(destFile.as_posix()), cDim(linkTo.as_posix()))
             destFile.symlink_to(linkTo)
 
-    def renameOrDeleteFoundFile(self, scanFile: ScanFile, destFile: Path, tosecEntry: TosecGameEntry) -> bool:
+    def renameOrDeleteFoundFile(self, scanFile: ScanFile, destFile: Path, tosecRomMatch: TosecGameRom) -> bool:
         if destFile.is_symlink():
             destFile.unlink()
         if destFile.exists():
-            return self.handleDestFound(scanFile, destFile, tosecEntry, args.delDupes)
+            return self.handleDestFound(scanFile, destFile, tosecRomMatch, args.delDupes)
         else:
             logging.info("rename file %s to %s", cDim(scanFile.fileName.as_posix()), cDim(destFile.as_posix()))
             scanFile.fileName.rename(destFile)
             return True
             
-    def handleDestFound(self, scanFile: ScanFile, destFile: Path, tosecEntry: TosecGameEntry, deleteDups: bool):
+    def handleDestFound(self, scanFile: ScanFile, destFile: Path, tosecRomMatch: TosecGameRom, deleteDups: bool):
         scanDest = ScanFile(destFile)
         matchDest = self.__matcher.findMatch(scanDest)
-        if matchDest is None or tosecEntry.sha1 != matchDest.sha1:
-            logging.error("In destination directory file %s was found but does not match entry it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
+        if matchDest is None or tosecRomMatch.sha1 != matchDest.sha1:
+            logging.error("In destination directory file %s was found but does not match ROM it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
             return False
         if deleteDups:
-            logging.warning("Delete Duplicate file %s for matching entry %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
+            logging.warning("Delete Duplicate file %s for matching ROM %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
             srcEntry.unlink()
         else:
-            logging.warning("Duplicate file found %s for matching entry %s. source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
+            logging.warning("Duplicate file found %s for matching ROM %s. source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
         return True

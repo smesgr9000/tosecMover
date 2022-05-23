@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from scanfile import ScanFile
-from tosecdat import TosecGameEntry
+from tosecdat import TosecGameRom
 
 class Strategy:
     """
@@ -12,16 +12,16 @@ class Strategy:
     def __init__(self):
         self.chain = None
 
-    def doStrategyMatch(self, scanFile: ScanFile, tosecEntry: list[TosecGameEntry]):
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]):
         """ 
         Scan found a matching TOSEC entrie(s)
         @param scanFile
             the file was scaned and caused the match
-        @tosecEntry
-            the entries matching the scaned files criteria"""
+        @tosecRomMatches
+            the ROM entries matching the scaned files criteria"""
 
         if self.chain is not None:
-            self.chain.doStrategyMatch(scanFile, tosecEntry)
+            self.chain.doStrategyMatch(scanFile, tosecRomMatches)
 
     def doStrategyNoMatch(self, scanFile: ScanFile):
         """
