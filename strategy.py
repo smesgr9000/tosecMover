@@ -14,11 +14,11 @@ class Strategy:
 
     def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]):
         """ 
-        Scan found a matching TOSEC entrie(s)
+        Scan found matching TOSEC entries
         @param scanFile
             the file was scaned and caused the match
         @tosecRomMatches
-            the ROM entries matching the scaned files criteria"""
+            the ROM entries matching the scaned file criteria"""
 
         if self.chain is not None:
             self.chain.doStrategyMatch(scanFile, tosecRomMatches)

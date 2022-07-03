@@ -9,9 +9,13 @@ import logging
 class StrategyDiag(Strategy):
     """
     Strategy to diagnosis of the given directories.
-    Count all found, missed and duplicate game ROMs.
-    Also try to find ROM files without a game entry and 
-    files with wrong name according to the game entry"""
+    Count all game ROMs for following criteria:
+    - Missing: ROMs not found but at least another ROM entry was found
+    - Having: ROMs found
+    - Duplicates: ROMs found but entry was already found before
+    - Unknown: Either
+            files not matching any TOSEC entry OR
+            file has not the expected name for the TOSEC entry"""
 
     def __init__(self, noMissing: bool, noHaving: bool):
         super().__init__()
