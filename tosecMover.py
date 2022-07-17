@@ -105,7 +105,7 @@ class Tosec:
             if not destPath.is_dir():
                 logging.error("destination %s is not a directory", cDim(args.destDir))
                 return
-            strategy = StrategyRename(destPath, self.__matcher)
+            strategy = StrategyRename(destPath, self.__matcher, args.delDupes)
             if args.diag:
                 strategy = strategy.doChain(StrategyDiag(args.noMissing, args.noHaving))
         else:
