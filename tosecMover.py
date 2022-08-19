@@ -31,16 +31,7 @@ class Tosec:
             for tosecEntry in tosecPath.iterdir():
                 if not tosecEntry.is_dir():
                     newRomList = self.__readTosecFile(tosecEntry)
-                    for entryKey in newRomList.keys():
-                        rom = newRomList[entryKey]
-                        rom0 = rom[0]
-                        if entryKey in romList:
-                            existingEntry = romList[entryKey][0]
-                            logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s", cDim(existingEntry.game.header.name + "/" + existingEntry.name), cDim(entryKey), existingEntry.md5 == rom0.md5, existingEntry.size == rom0.size, cDim(rom0.game.header.name + "/" + rom0.name));
-                            if existingEntry.md5 == rom0.md5 and existingEntry.size == rom0.size and existingEntry.crc == rom0.crc:
-                                romList[entryKey].extend(rom)
-                        else:
-                            romList[entryKey] = rom
+                    self.__joinRomLists(romList, newRomList)
         self.__matcher = Matcher(romList)
 
     def __readTosecFile(self, tosecFile: Path) -> dict:
@@ -50,28 +41,67 @@ class Tosec:
         game entry is skipped."""
 
         root = xml.etree.ElementTree.parse(tosecFile.as_posix()).getroot()
-        romList = dict()
+        fileRomList = dict()
         gameList = []
         try:
             header = TosecHeader(root)
             for game in root.findall("game"):
                 try:
                     entry = TosecGameEntry(game, header);
-                    gameRomList = dict()
-                    for rom in entry.roms:
-                        if rom.sha1 in romList:
-                            raise InvalidTosecFileException("ROM with sha1 {} was already added".format(cDim(rom.sha1)))
-                        gameRomList[rom.sha1] = [rom]
+                    gameRomList = self.__createGameEntryRomList(entry, fileRomList)
                     gameList.append(entry)
-                    romList.update(gameRomList)
+                    self.__joinRomLists(fileRomList, gameRomList)
                 except InvalidTosecFileException as exception:
                     logging.warning("TOSEC DAT file %s parser error. Entry skipped because: %s", cDim(tosecFile.as_posix()), exception)
-            logging.info("TOSEC DAT file %s loaded %s entries with %s roms", cDim(tosecFile.as_posix()), len(gameList), len(romList))
+            logging.info("TOSEC DAT file %s loaded %s entries with %s roms", cDim(tosecFile.as_posix()), len(gameList), len(fileRomList))
             header.games = gameList
-            header.roms = romList
+            header.roms = fileRomList
         except InvalidTosecFileException as exception:
             logging.warning("TOSEC DAT file %s parser error. File skipped because: %s", cDim(tosecFile.as_posix()), exception)
-        return romList
+        return fileRomList
+
+    def __createGameEntryRomList(self, entry: TosecGameEntry, romList: dict) -> dict:
+        """
+        Reads a single TOSEC DAT game entry ROM files.
+        It will check the given SHA1 dictonary if any ROM file is already
+        in the database. Will throw an exception if all ROMs of at least another game entries is identical
+        Otherwise a dict of sha1 ROMs is returned."""
+
+        dups = dict()
+        gameRomList = dict()
+        for rom in entry.roms:
+            if rom.sha1 in romList:
+                for gameEntry in romList[rom.sha1]:
+                    game = gameEntry.game
+                    dups[game] = dups.get(game, 0) + 1
+            gameRomList[rom.sha1] = [rom]
+
+        if len(dups) > 0:
+            for game, duplicateRoms in dict(dups).items():
+                if len(game.roms) != duplicateRoms or duplicateRoms != len(gameRomList):
+                    dups.pop(game)
+            if len(dups) > 0:
+                sha1s = ', '.join(str(rom.sha1) for rom in entry.roms)
+                games = ', '.join(str(dup.name) for dup in dups.keys())
+                logging.debug("All Game ROMs %s of with sha1 %s were already added in other game %s", cDim(entry.name), cDim(sha1s), cDim(games))
+                raise InvalidTosecFileException("All Game ROMs {} were already added in other game {}".format(cDim(entry.name), cDim(games)))
+        return gameRomList
+
+    def __joinRomLists(self, romList: dict, concatList: dict):
+        """
+        Joins two dictonaries together by adding entres for concatList into romList.
+        Will skip all files with matching sha1, but different values for md5, size or crc
+        If a ROM sha1 occurs in several roms entries the returned rom list will contain all."""
+
+        for entryKey, rom in concatList.items():
+            rom0 = rom[0]
+            if entryKey in romList:
+                existingEntry = romList[entryKey][0]
+                logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s", cDim(existingEntry.game.header.name + "/" + existingEntry.name), cDim(entryKey), existingEntry.md5 == rom0.md5, existingEntry.size == rom0.size, cDim(rom0.game.header.name + "/" + rom0.name));
+                if existingEntry.md5 == rom0.md5 and existingEntry.size == rom0.size and existingEntry.crc == rom0.crc:
+                    romList[entryKey].extend(rom)
+            else:
+                romList[entryKey] = rom
 
     def __scanFile(self, entry: Path, strategy: Strategy):
         scan = ScanFile(entry)
