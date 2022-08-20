@@ -2,9 +2,10 @@ import pytest
 from pathlib import Path
 from scanfile import ScanFile
 from strategydiag import StrategyDiag
+from tosecdat import TosecGameRom
 from unittest import mock
 
-def createHelloWorld():
+def createHelloWorld() -> ScanFile:
     m = mock.Mock()
     # For 'HelloWorld'
     m.fileName = Path('HelloWorld.txt')
@@ -15,7 +16,7 @@ def createHelloWorld():
     m.md5 = '68e109f0f40ca72a15e05cc22786f8e6'
     return m;
 
-def createGameRomFromScanFile(sf: ScanFile):
+def createGameRomFromScanFile(sf: ScanFile) -> TosecGameRom:
     m = mock.Mock()
     m.name = sf.fileName.name
     m.size = sf.size
@@ -26,6 +27,9 @@ def createGameRomFromScanFile(sf: ScanFile):
     
 
 def test_doStrategyNoMatch():
+    """
+    Test StrategyDiag.doStrategyNoMatch will store a no matched ScanFile as BAD"""
+
     sd = StrategyDiag(False, False)
     mock = createHelloWorld()
     sd.doStrategyNoMatch(mock)
@@ -36,6 +40,10 @@ def test_doStrategyNoMatch():
 
 @mock.patch('builtins.print') 
 def test_doFinalWithNoMatch(mockPrint):
+    """
+    Test StrategyDiag.doFinal with a no match found 
+    will print UNKNOWN with file name"""
+
     sd = StrategyDiag(False, False)
     mock = createHelloWorld()
     sd.doStrategyNoMatch(mock)
@@ -45,8 +53,10 @@ def test_doFinalWithNoMatch(mockPrint):
     assert mockPrint.call_args_list[1].contain('UNKNOWN')
     assert mockPrint.call_args_list[2].contain(mock.fileName.as_posix())
 
-
 def test_doStrategyMatchGood():
+    """
+    Test StrategyDiag.doStrategyMatch will store a matched ScanFile as GOOD"""
+    
     sd = StrategyDiag(False, False)
     mockGood = createHelloWorld()
     mockGameRom = createGameRomFromScanFile(mockGood)
@@ -57,6 +67,10 @@ def test_doStrategyMatchGood():
     assert sd.goodBySystem.get(mockGameRom.game.header) == { mockGameRom: mockGood.fileName }
 
 def test_doStrategyMatchDuplicate():
+    """
+    Test StrategyDiag.doStrategyMatch will store two matched ScanFiles
+    with the same file one as GOOD one as DUPLICATE"""
+
     sd = StrategyDiag(False, False)
     mockGood = createHelloWorld()
     mockGameRom = createGameRomFromScanFile(mockGood)

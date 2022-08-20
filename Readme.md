@@ -38,6 +38,16 @@ For flags and shell command arguments and options excute in the directory:
 python3 tosecMover.py --help
 ```
 
+Running Tests
+-------------
+
+Unit tests are written to be used by pytest. Running all tests can be done
+by following command:
+
+```
+pytest
+```
+
 License
 -------
 
