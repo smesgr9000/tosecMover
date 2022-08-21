@@ -8,13 +8,13 @@ from unittest import mock
 def createHelloWorld() -> ScanFile:
     m = mock.Mock()
     # For 'HelloWorld'
-    m.fileName = Path('HelloWorld.txt')
+    m.fileName = Path("HelloWorld.txt")
     m.size = 10
     m.isLoaded = True
-    m.crc = '77770c79'
-    m.sha1 = 'db8ac1c259eb89d4a131b253bacfca5f319d54f2'
-    m.md5 = '68e109f0f40ca72a15e05cc22786f8e6'
-    return m;
+    m.crc = "77770c79"
+    m.sha1 = "db8ac1c259eb89d4a131b253bacfca5f319d54f2"
+    m.md5 = "68e109f0f40ca72a15e05cc22786f8e6"
+    return m
 
 def createGameRomFromScanFile(sf: ScanFile) -> TosecGameRom:
     m = mock.Mock()
@@ -24,7 +24,6 @@ def createGameRomFromScanFile(sf: ScanFile) -> TosecGameRom:
     m.sha1 = sf.sha1
     m.md5 = sf.md5
     return m
-    
 
 def test_doStrategyNoMatch():
     """
@@ -50,7 +49,7 @@ def test_doFinalWithNoMatch(mockPrint):
     sd.doFinal()
     
     assert mockPrint.call_count == 3
-    assert mockPrint.call_args_list[1].contain('UNKNOWN')
+    assert mockPrint.call_args_list[1].contain("UNKNOWN")
     assert mockPrint.call_args_list[2].contain(mock.fileName.as_posix())
 
 def test_doStrategyMatchGood():
