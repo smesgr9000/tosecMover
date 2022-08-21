@@ -115,6 +115,7 @@ class Tosec:
         foundDirectories = []
         for scanPath in listPath:
             if scanPath.is_dir() and not scanPath.is_symlink():
+                logging.debug("scan directory %s", cDim(scanPath.as_posix()))
                 for entry in scanPath.iterdir():
                     if entry.is_file():
                         self.__scanFile(entry, strategy)
@@ -146,8 +147,10 @@ class Tosec:
             return
         try:
             scanPaths = [scanPath]
-            while len(scanPaths) > 0:
+            while True:
                 scanPaths = self.__scanDirectory(scanPaths, strategy)
+                if not args.recursive or len(scanPaths) <= 0:
+                    break
         finally:
             strategy.doFinal()
 
@@ -159,6 +162,7 @@ parser.add_argument("--noHaving", action="store_true", help="If in diagnostic mo
 parser.add_argument("--noMissing", action="store_true", help="If in diagnostic mode don't print 'Missing' files")
 parser.add_argument("tosec", help="filename of TOSEC DAT file or directory to process")
 parser.add_argument("--source", help="source file or directory to scan")
+parser.add_argument("-r", action="store_true", dest="recursive", help="source dictory is scaned recursively")
 parser.add_argument("dest", help="destination directory to move found files. If no source is given the directory is scaned without moving")
 
 args = parser.parse_args()

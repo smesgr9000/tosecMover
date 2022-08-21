@@ -51,7 +51,7 @@ class StrategyRename(Strategy):
                 self.createParentDirectories(otherDestFile)
                 self.softLink(scanFile, otherDestFile, destFile, rom)
         elif len(tosecRomMatches) > 1:
-            logging.warning("Other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
+            logging.warning("other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
 
     def createParentDirectories(self, destFile: Path):
         if not destFile.parent.exists():
@@ -81,13 +81,13 @@ class StrategyRename(Strategy):
         scanDest = ScanFile(destFile)
         matchDests = self.__matcher.findMatch(scanDest)
         if matchDests is None:
-            logging.error("In destination directory file %s was found but does not match ROM it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
+            logging.error("in destination directory file %s was found but does not match ROM it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
             return False
         if deleteDups:
             for matchDest in matchDests:
-                logging.warning("Delete Duplicate file %s for matching ROM %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
+                logging.warning("delete Duplicate file %s for matching ROM %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
             srcEntry.unlink()
         else:
             for matchDest in matchDests:
-                logging.warning("Duplicate file found %s for matching ROM %s. source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
+                logging.warning("duplicate file found %s for matching ROM %s. Source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
         return True

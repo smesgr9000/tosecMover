@@ -35,7 +35,7 @@ class StrategyDiag(Strategy):
                 else:
                     self.goodBySystem.setdefault(rom.game.header, dict()).setdefault(rom, scanFile.fileName)
         else:
-            logging.debug("Found file %s not matching any TOSEC name with %s", cDim(scanFile.fileName.name), cDim(tosecRoms[0].sha1))
+            logging.debug("found file %s not matching any TOSEC name with %s", cDim(scanFile.fileName.name), cDim(tosecRoms[0].sha1))
             self.bads.append([scanFile.fileName, tosecRoms[0]])
 
     def doStrategyNoMatch(self, scanFile: ScanFile):
@@ -51,7 +51,7 @@ class StrategyDiag(Strategy):
         for good in self.goodBySystem.keys():
             having = self.goodBySystem[good].keys();
             print()
-            print(f"Found {len(having)}/{len(good.roms)} of {cDim(good.name)}")
+            print(f"found {len(having)}/{len(good.roms)} of {cDim(good.name)}")
             missing = dict(good.roms)
             for rom in having:
                 missing.pop(rom.sha1, None)

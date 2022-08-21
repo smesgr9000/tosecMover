@@ -95,7 +95,7 @@ class TosecGameEntry:
         self.roms = []
         for rom in roms:
             self.roms.append(TosecGameRom(rom, self))
-        logging.debug("Parsed game entry %s", cDim(str(self)))
+        logging.debug("parsed game entry %s", cDim(self.name))
 
     def getPathName(self, basePath: Path) -> Path:
         """ 

@@ -15,7 +15,7 @@ class ScanFile:
     def __init__(self, fileName: Path):
         self.fileName = fileName
         self.isLoaded = False
-        logging.debug("Load file %s into memory", cDim(self.fileName.as_posix()))
+        logging.debug("load file %s into memory", cDim(self.fileName.as_posix()))
         try:
             file = open(fileName, "rb")
             self.size = fileName.stat().st_size
@@ -32,17 +32,17 @@ class ScanFile:
                 rawSHA1.update(fileData)
                 rawCRC = binascii.crc32(fileData, rawCRC)
                 
-            logging.debug("File %s bytes loaded %s", cDim(self.fileName.as_posix()), self.size)
+            logging.debug("file %s bytes loaded %s", cDim(self.fileName.as_posix()), self.size)
             self.crc = format(rawCRC & 0xffffffff, "0>8x")
             self.md5 = rawMD5.hexdigest()
             self.sha1 = rawSHA1.hexdigest()
             
             if self.size != fileLoaded:
-                logging.error("File %s file size %s does not match file system size %s", cDim(self.fileName.as_posix()), cDim(self.size), cDim(fileLoaded))
+                logging.error("file %s file size %s does not match file system size %s", cDim(self.fileName.as_posix()), cDim(self.size), cDim(fileLoaded))
             else:
                 self.isLoaded = True
-                logging.info("Scan file %s", cDim(str(self)))
+                logging.info("scan file %s", cDim(str(vars(self))))
         except OSError as error:
-            logging.error("Open file %s caused an error %s", cDim(self.fileName.as_posix()), cDim(error))
+            logging.error("open file %s caused an error %s", cDim(self.fileName.as_posix()), cDim(error))
         else:
             file.close()
