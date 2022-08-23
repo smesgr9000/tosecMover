@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from pathlib import Path
 from scanfile import ScanFile
 from tosecdat import TosecGameRom
 
@@ -12,23 +13,25 @@ class Strategy:
     def __init__(self):
         self.chain = None
 
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]):
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> Path:
         """ 
         Scan found matching TOSEC entries
         @param scanFile
             the file was scaned and caused the match
         @tosecRomMatches
-            the ROM entries matching the scaned file criteria"""
+            the ROM entries matching the scaned file criteria
+        @return
+            the found match in target directory or None on error"""
 
         if self.chain is not None:
-            self.chain.doStrategyMatch(scanFile, tosecRomMatches)
+            return self.chain.doStrategyMatch(scanFile, tosecRomMatches)
+        return None
 
     def doStrategyNoMatch(self, scanFile: ScanFile):
         """
         Scan found a non-matching file
         @param scanFile
-            the file was scaned and caused the miss 
-        """
+            the file was scaned and caused this miss"""
 
         if self.chain is not None:
             self.chain.doStrategyNoMatch(scanFile)
@@ -44,7 +47,7 @@ class Strategy:
         """
         Chain another Strategy to this Strategy
         @param
-            the strategy to chain and execute after this strategy on every hook
+            the strategy to chain and is executed after this strategy on every hook
         @return
             the given strategy"""
 

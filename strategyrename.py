@@ -41,7 +41,7 @@ class StrategyRename(Strategy):
         self.__matcher = matcher
         self.__delDupes = delDupes
     
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]):
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> Path:
         super().doStrategyMatch(scanFile, tosecRomMatches)
         destFile = tosecRomMatches[0].getFileName(self.__destPath)
         self.createParentDirectories(destFile)
@@ -50,8 +50,10 @@ class StrategyRename(Strategy):
                 otherDestFile = rom.getFileName(self.__destPath)
                 self.createParentDirectories(otherDestFile)
                 self.softLink(scanFile, otherDestFile, destFile, rom)
+            return destFile
         elif len(tosecRomMatches) > 1:
             logging.warning("other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
+        return None
 
     def createParentDirectories(self, destFile: Path):
         if not destFile.parent.exists():

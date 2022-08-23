@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from scanfile import ScanFile
+from strategy import Strategy
 from strategydiag import StrategyDiag
 from tosecdat import TosecGameRom
 from unittest import mock
@@ -23,6 +24,11 @@ def createGameRomFromScanFile(sf: ScanFile) -> TosecGameRom:
     m.crc = sf.crc
     m.sha1 = sf.sha1
     m.md5 = sf.md5
+    return m
+
+def createSimpleFoundMatchStrategy() -> Strategy:
+    m = mock.Mock()
+    m.doStrategyMatch = mock.MagicMock(return_value = Path("dummyPath/MockFile.txt"))
     return m
 
 def test_doStrategyNoMatch():
@@ -64,6 +70,22 @@ def test_doStrategyMatchGood():
     assert len(sd.dups) == 0
     assert len(sd.goodBySystem) == 1
     assert sd.goodBySystem.get(mockGameRom.game.header) == { mockGameRom: mockGood.fileName }
+
+def test_doStrategyMatchGoodOnRenameScan():
+    """
+    Test StrategyDiag.doStrategyMatch will store a matched ScanFile as GOOD
+    even if the file is freshly renamed by StrategyRename"""
+    
+    sd = StrategyDiag(False, False)
+    sd.chain = createSimpleFoundMatchStrategy()
+    mockSource = createHelloWorld()
+    mockGameRom = createGameRomFromScanFile(mockSource)
+    mockGameRom.name = "MockFile.txt"
+    sd.doStrategyMatch(mockSource, [mockGameRom])
+    assert len(sd.bads) == 0
+    assert len(sd.dups) == 0
+    assert len(sd.goodBySystem) == 1
+    assert sd.goodBySystem.get(mockGameRom.game.header) == { mockGameRom: sd.chain.doStrategyMatch() }
 
 def test_doStrategyMatchDuplicate():
     """

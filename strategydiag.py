@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from color import *
+from pathlib import Path
 from scanfile import ScanFile
 from strategy import Strategy
 from tosecdat import TosecGameRom
@@ -22,21 +23,24 @@ class StrategyDiag(Strategy):
         self.goodBySystem = dict()
         self.dups = dict()
         self.bads = []
-        self.__noMissing = noMissing;
-        self.__noHaving = noHaving;
+        self.__noMissing = noMissing
+        self.__noHaving = noHaving
     
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRoms: list[TosecGameRom]):
-        super().doStrategyMatch(scanFile, tosecRoms)
-        foundRoms = [entry for entry in tosecRoms if scanFile.fileName.name == entry.name]
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRoms: list[TosecGameRom]) -> Path:
+        found = super().doStrategyMatch(scanFile, tosecRoms) or scanFile.fileName
+        logging.debug("diag file %s", cDim(found.name))
+        foundRoms = [entry for entry in tosecRoms if found.name == entry.name]
         if len(foundRoms) > 0:
             for rom in foundRoms:
                 if rom in self.goodBySystem.get(rom.game.header, dict()):
-                    self.dups.setdefault(rom, []).append(scanFile.fileName)
+                    self.dups.setdefault(rom, []).append(found)
                 else:
-                    self.goodBySystem.setdefault(rom.game.header, dict()).setdefault(rom, scanFile.fileName)
+                    self.goodBySystem.setdefault(rom.game.header, dict()).setdefault(rom, found)
+            return found
         else:
-            logging.debug("found file %s not matching any TOSEC name with %s", cDim(scanFile.fileName.name), cDim(tosecRoms[0].sha1))
-            self.bads.append([scanFile.fileName, tosecRoms[0]])
+            logging.debug("found file %s not matching any TOSEC name with %s", cDim(found.name), cDim(tosecRoms[0].sha1))
+            self.bads.append([found, tosecRoms[0]])
+        return None
 
     def doStrategyNoMatch(self, scanFile: ScanFile):
         super().doStrategyNoMatch(scanFile)
