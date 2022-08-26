@@ -40,10 +40,10 @@ class Tosec:
         of the DAT file. If a ROM is found several times in the DAT the complete 
         game entry is skipped."""
 
-        root = xml.etree.ElementTree.parse(tosecFile.as_posix()).getroot()
         fileRomList = dict()
-        gameList = []
         try:
+            root = xml.etree.ElementTree.parse(tosecFile.as_posix()).getroot()
+            gameList = []
             header = TosecHeader(root)
             for game in root.findall("game"):
                 try:
@@ -56,7 +56,7 @@ class Tosec:
             logging.info("TOSEC DAT file %s loaded %s entries with %s roms", cDim(tosecFile.as_posix()), len(gameList), len(fileRomList))
             header.games = gameList
             header.roms = fileRomList
-        except InvalidTosecFileException as exception:
+        except (InvalidTosecFileException, xml.etree.ElementTree.ParseError) as exception:
             logging.warning("TOSEC DAT file %s parser error. File skipped because: %s", cDim(tosecFile.as_posix()), exception)
         return fileRomList
 
