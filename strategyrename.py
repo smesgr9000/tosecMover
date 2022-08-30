@@ -2,7 +2,7 @@
 
 from color import *
 from pathlib import Path
-from scanfile import ScanFile
+from scanfile import PlainFileReader, ScanFile
 from strategy import Strategy
 from tosecdat import TosecGameRom
 import logging
@@ -41,7 +41,7 @@ class StrategyRename(Strategy):
         self.__matcher = matcher
         self.__delDupes = delDupes
     
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> Path:
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> ScanFile:
         super().doStrategyMatch(scanFile, tosecRomMatches)
         destFile = tosecRomMatches[0].getFileName(self.__destPath)
         self.createParentDirectories(destFile)
@@ -50,7 +50,7 @@ class StrategyRename(Strategy):
                 otherDestFile = rom.getFileName(self.__destPath)
                 self.createParentDirectories(otherDestFile)
                 self.softLink(scanFile, otherDestFile, destFile, rom)
-            return destFile
+            return ScanFile(PlainFileReader(destFile))
         elif len(tosecRomMatches) > 1:
             logging.warning("other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
         return None
@@ -80,7 +80,7 @@ class StrategyRename(Strategy):
             return True
             
     def handleDestFound(self, scanFile: ScanFile, destFile: Path, tosecRomMatch: TosecGameRom, deleteDups: bool):
-        scanDest = ScanFile(destFile)
+        scanDest = ScanFile(PlainFileReader(destFile))
         matchDests = self.__matcher.findMatch(scanDest)
         if matchDests is None:
             logging.error("in destination directory file %s was found but does not match ROM it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
@@ -88,7 +88,7 @@ class StrategyRename(Strategy):
         if deleteDups:
             for matchDest in matchDests:
                 logging.warning("delete Duplicate file %s for matching ROM %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
-            srcEntry.unlink()
+            scanFile.fileName.unlink()
         else:
             for matchDest in matchDests:
                 logging.warning("duplicate file found %s for matching ROM %s. Source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))

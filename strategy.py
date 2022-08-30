@@ -26,7 +26,7 @@ class Strategy:
             return self.chain.doStrategyScan(listPath)
         return listPath
 
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> Path:
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> ScanFile:
         """ 
         Process found matching TOSEC entries
         @param scanFile

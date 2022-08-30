@@ -6,6 +6,7 @@ from strategy import Strategy
 from strategydiag import StrategyDiag
 from strategyrename import StrategyRename, Matcher
 from strategyscan import StrategyScan
+from strategyscancompressed import StrategyScanCompressed
 from tosecdat import *
 import argparse
 import logging
@@ -119,7 +120,10 @@ class Tosec:
         else:
             scanPath = Path(args.dest).resolve()
             strategy = StrategyDiag(args.noMissing, args.noHaving)
-        strategy = strategy.doChain(StrategyScan(self.__matcher))
+        if args.scanCompressed:
+            strategy = strategy.doChain(StrategyScanCompressed(self.__matcher))
+        else:
+            strategy = strategy.doChain(StrategyScan(self.__matcher))
         if not scanPath.exists():
             logging.error("directory %s to scan does not exsits", cDim(scanPath.as_posix()))
             return
@@ -141,7 +145,8 @@ parser.add_argument("--noHaving", action="store_true", help="If in diagnostic mo
 parser.add_argument("--noMissing", action="store_true", help="If in diagnostic mode don't print 'Missing' files")
 parser.add_argument("tosec", help="filename of TOSEC DAT file or directory to process")
 parser.add_argument("--source", help="source file or directory to scan")
-parser.add_argument("-r", action="store_true", dest="recursive", help="source dictory is scaned recursively")
+parser.add_argument("-r", action="store_true", dest="recursive", help="source dictonary is scaned recursively")
+parser.add_argument("-x", action="store_true", dest="scanCompressed", help="compressed files in source dictonary is scaned. Supported file formats is ZIP. Experimental file is not moved only extracted")
 parser.add_argument("dest", help="destination directory to move found files. If no source is given the directory is scaned without moving")
 
 args = parser.parse_args()

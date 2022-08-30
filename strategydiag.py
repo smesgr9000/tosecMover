@@ -26,20 +26,20 @@ class StrategyDiag(Strategy):
         self.__noMissing = noMissing
         self.__noHaving = noHaving
     
-    def doStrategyMatch(self, scanFile: ScanFile, tosecRoms: list[TosecGameRom]) -> Path:
-        found = super().doStrategyMatch(scanFile, tosecRoms) or scanFile.fileName
-        logging.debug("diag file match %s", cDim(found.name))
-        foundRoms = [entry for entry in tosecRoms if found.name == entry.name]
+    def doStrategyMatch(self, scanFile: ScanFile, tosecRoms: list[TosecGameRom]) -> ScanFile:
+        found = super().doStrategyMatch(scanFile, tosecRoms) or scanFile
+        logging.debug("diag file match %s", cDim(found.fileName.name))
+        foundRoms = [entry for entry in tosecRoms if found.fileName.name == entry.name]
         if len(foundRoms) > 0:
             for rom in foundRoms:
                 if rom in self.goodBySystem.get(rom.game.header, dict()):
-                    self.dups.setdefault(rom, []).append(found)
+                    self.dups.setdefault(rom, []).append(found.fileName)
                 else:
-                    self.goodBySystem.setdefault(rom.game.header, dict()).setdefault(rom, found)
+                    self.goodBySystem.setdefault(rom.game.header, dict()).setdefault(rom, found.fileName)
             return found
         else:
-            logging.debug("found file %s not matching any TOSEC name with %s", cDim(found.name), cDim(tosecRoms[0].sha1))
-            self.bads.append([found, tosecRoms[0]])
+            logging.debug("found file %s not matching any TOSEC name with %s", cDim(found.fileName.name), cDim(tosecRoms[0].sha1))
+            self.bads.append([found.fileName, tosecRoms[0]])
         return None
 
     def doStrategyNoMatch(self, scanFile: ScanFile):

@@ -6,25 +6,90 @@ import binascii
 import hashlib
 import logging
 
+class IScanFileReader:
+    """
+    Interface for file operation allowed by a ScanFile."""
+
+    name: str = None
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def read(self, size):
+        pass
+
+    def size(self):
+        pass
+
+    def as_posix(self):
+        pass
+
+    def rename(self):
+        pass
+
+    def unlink(self):
+        pass
+
+class PlainFileReader(IScanFileReader):
+    """
+    Implementation of IScanFileReader for a file on a filesystem"""
+
+    def __init__(self, fileName: Path):
+        self.__fileName = fileName
+        self.__file = None
+        self.name = self.__fileName.name
+
+    def open(self):
+        if self.__file is not None:
+            logging.warning("file is already open %s", cDim(self__fileName.as_posix()))
+            return
+        self.__file = open(self.__fileName, "rb")
+
+    def close(self):
+        if self.__file is None:
+            logging.warning("file is already closed %s", cDim(self__fileName.as_posix()))
+            return
+        self.__file.close()
+        self.__file = None
+
+    def size(self):
+        return self.__fileName.stat().st_size
+
+    def read(self, size: int):
+        return self.__file.read(size)
+
+    def as_posix(self):
+        return self.__fileName.as_posix()
+
+    def rename(self, destFile: Path):
+        self.__fileName.rename(destFile)
+
+    def unlink(self):
+        self.__fileName.unlink()
+    
+
 class ScanFile:
     """
     ScanFile represents a found file on the filesystem. 
     On init the given path is read to calculate file size, CRC, SHA1 and MD5.
     If file coudn't be read an exception is raised """
 
-    def __init__(self, fileName: Path):
+    def __init__(self, fileName: IScanFileReader):
         self.fileName = fileName
         self.isLoaded = False
         logging.debug("load file %s into memory", cDim(self.fileName.as_posix()))
         try:
-            file = open(fileName, "rb")
-            self.size = fileName.stat().st_size
+            fileName.open()
+            self.size = fileName.size()
             fileLoaded = 0
-            rawMD5 = hashlib.md5();
+            rawMD5 = hashlib.md5()
             rawSHA1 = hashlib.sha1()
             rawCRC = 0
             while True:
-                fileData = file.read(1024*1024)
+                fileData = fileName.read(1024*1024)
                 if len(fileData) == 0:
                     break
                 fileLoaded += len(fileData)
@@ -45,4 +110,4 @@ class ScanFile:
         except OSError as error:
             logging.error("open file %s caused an error %s", cDim(self.fileName.as_posix()), cDim(error))
         else:
-            file.close()
+            fileName.close()

@@ -14,15 +14,15 @@ class StrategyScan(Strategy):
 
     def __init__(self, matcher: Matcher):
         super().__init__()
-        self.__matcher = matcher
+        self._matcher = matcher
 
     def doStrategyScan(self, listPath: list[Path]) -> list[Path]:
         scanPath = super().doStrategyScan(listPath)
         return self.__scanDirectory(scanPath)
 
-    def __scanFile(self, entry: Path):
-        scan = ScanFile(entry)
-        match = self.__matcher.findMatch(scan)
+    def _scanFile(self, entry: Path):
+        scan = ScanFile(PlainFileReader(entry))
+        match = self._matcher.findMatch(scan)
         if match is None:
             self.doStrategyNoMatch(scan)
         else:
@@ -35,10 +35,10 @@ class StrategyScan(Strategy):
                 logging.debug("scan directory %s", cDim(scanPath.as_posix()))
                 for entry in scanPath.iterdir():
                     if entry.is_file():
-                        self.__scanFile(entry)
+                        self._scanFile(entry)
                     elif not scanPath.is_symlink():
                         logging.debug("add directory %s to list to scan", cDim(entry.as_posix()))
                         foundDirectories.append(entry)
             elif scanPath.is_file():
-                self.__scanFile(scanPath)
+                self._scanFile(scanPath)
         return foundDirectories

@@ -27,7 +27,8 @@ Currently the tool does **NOT** support:
 - not multithreaded
 - diagnostic could be improved
 - more flexible destination
-- compression/decompression
+- compression/decompression for target files
+- files in ZIP archives can be scaned, but only extracted not moved
 
 Running
 -------
