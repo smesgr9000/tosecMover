@@ -2,10 +2,10 @@
 
 from pathlib import Path
 from color import *
-from scanfile import *
 from strategy import Strategy
 from strategydiag import StrategyDiag
 from strategyrename import StrategyRename, Matcher
+from strategyscan import StrategyScan
 from tosecdat import *
 import argparse
 import logging
@@ -103,29 +103,6 @@ class Tosec:
             else:
                 romList[entryKey] = rom
 
-    def __scanFile(self, entry: Path, strategy: Strategy):
-        scan = ScanFile(entry)
-        match = self.__matcher.findMatch(scan)
-        if match is None:
-            strategy.doStrategyNoMatch(scan)
-        else:
-            strategy.doStrategyMatch(scan, match)
-    
-    def __scanDirectory(self, listPath: list[Path], strategy: Strategy) -> list[Path]:
-        foundDirectories = []
-        for scanPath in listPath:
-            if scanPath.is_dir() and not scanPath.is_symlink():
-                logging.debug("scan directory %s", cDim(scanPath.as_posix()))
-                for entry in scanPath.iterdir():
-                    if entry.is_file():
-                        self.__scanFile(entry, strategy)
-                    elif not scanPath.is_symlink():
-                        logging.debug("add directory %s to list to scan", cDim(entry.as_posix()))
-                        foundDirectories.append(entry)
-            elif scanPath.is_file():
-                self.__scanFile(scanPath, strategy)
-        return foundDirectories
-    
     def scanDirectory(self, args: argparse.Namespace):
         if args.source is not None:
             scanPath = Path(args.source).resolve()
@@ -142,14 +119,16 @@ class Tosec:
         else:
             scanPath = Path(args.dest).resolve()
             strategy = StrategyDiag(args.noMissing, args.noHaving)
+        strategy = strategy.doChain(StrategyScan(self.__matcher))
         if not scanPath.exists():
             logging.error("directory %s to scan does not exsits", cDim(scanPath.as_posix()))
             return
         try:
             scanPaths = [scanPath]
             while True:
-                scanPaths = self.__scanDirectory(scanPaths, strategy)
-                if not args.recursive or len(scanPaths) <= 0:
+                startPaths = scanPaths
+                scanPaths = strategy.doStrategyScan(scanPaths)
+                if not args.recursive or len(scanPaths) <= 0 or startPaths == scanPaths:
                     break
         finally:
             strategy.doFinal()

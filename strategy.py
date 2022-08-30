@@ -13,9 +13,22 @@ class Strategy:
     def __init__(self):
         self.chain = None
 
+    def doStrategyScan(self, listPath: list[Path]) -> list[Path]:
+        """
+        Scan given list of Path entries. If an entry is not processed
+        are returned. If not implemented by a Strategy every entry is returned.
+        @param listPath
+            the entries to scan for
+        @return
+            all entries not processed"""
+
+        if self.chain is not None:
+            return self.chain.doStrategyScan(listPath)
+        return listPath
+
     def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> Path:
         """ 
-        Scan found matching TOSEC entries
+        Process found matching TOSEC entries
         @param scanFile
             the file was scaned and caused the match
         @tosecRomMatches
@@ -45,9 +58,10 @@ class Strategy:
 
     def doChain(self, chain):
         """
-        Chain another Strategy to this Strategy
+        Chain another Strategy to this Strategy.
+        The given strategy is executed before this strategy on every hook.
         @param
-            the strategy to chain and is executed after this strategy on every hook
+            the strategy to chain
         @return
             the given strategy"""
 

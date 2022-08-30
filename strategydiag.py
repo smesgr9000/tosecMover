@@ -28,7 +28,7 @@ class StrategyDiag(Strategy):
     
     def doStrategyMatch(self, scanFile: ScanFile, tosecRoms: list[TosecGameRom]) -> Path:
         found = super().doStrategyMatch(scanFile, tosecRoms) or scanFile.fileName
-        logging.debug("diag file %s", cDim(found.name))
+        logging.debug("diag file match %s", cDim(found.name))
         foundRoms = [entry for entry in tosecRoms if found.name == entry.name]
         if len(foundRoms) > 0:
             for rom in foundRoms:
@@ -44,6 +44,7 @@ class StrategyDiag(Strategy):
 
     def doStrategyNoMatch(self, scanFile: ScanFile):
         super().doStrategyNoMatch(scanFile)
+        logging.debug("diag file don't match %s", cDim(scanFile.fileName.as_posix()))
         self.bads.append([scanFile.fileName, None])
 
     def doFinal(self):
