@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import pytest
 from tosecdat import InvalidTosecFileException, TosecGameEntry, TosecGameRom, TosecHeader
 from unittest import mock

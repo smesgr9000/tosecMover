@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import pytest
 from pathlib import Path
 from scanfile import PlainFileReader, ScanFile
