@@ -9,7 +9,7 @@ import zipfile
 
 class ZipFileReader(IScanFileReader):
     """
-    Implementation of IScanFileReader for a file in a ZIP archive
+    Implementation of IScanFileReader for a file in a ZIP archive.
     Not all operations are implemented yet :-("""
 
     def __init__(self, archive: Path, zipInfo: zipfile.ZipInfo):
@@ -57,11 +57,11 @@ class StrategyScanCompressed(StrategyScan):
     """
     Strategy to scan every directory/files from the source directory.
     If a directory is found the content is retruned. 
-    Otherwise the file is checked. If does not match a known entry and is a
+    Otherwise the file is checked. If Matcher does not match and file is a
     ZIP archive every entry of the ZIP archive is scaned.
     For each found entry either doStrategyMatch or doStrategyNoMatch is called.
-    If the ZIP has no entry or an error occurs doStrategyNoMatch 
-    for the ZIP is called"""
+    doStrategyNoMatch is called for the ZIP archive if the ZIP has either no
+    entry or an error occurs while processing the ZIP archive."""
 
     def __init__(self, matcher: Matcher):
         super().__init__(matcher)

@@ -8,7 +8,7 @@ import logging
 
 class IScanFileReader:
     """
-    Interface for file operation allowed by a ScanFile."""
+    Interface for file operations used by ScanFile class."""
 
     name: str = None
 
@@ -35,7 +35,7 @@ class IScanFileReader:
 
 class PlainFileReader(IScanFileReader):
     """
-    Implementation of IScanFileReader for a file on a filesystem"""
+    Implementation of IScanFileReader for a file on a filesystem."""
 
     def __init__(self, fileName: Path):
         self.__fileName = fileName
@@ -74,8 +74,8 @@ class PlainFileReader(IScanFileReader):
 class ScanFile:
     """
     ScanFile represents a found file on the filesystem. 
-    On init the given path is read to calculate file size, CRC, SHA1 and MD5.
-    If file coudn't be read an exception is raised """
+    On init the given file is read to calculate file size, CRC, SHA1 and MD5.
+    If the given file coudn't be read an exception is raised."""
 
     def __init__(self, fileName: IScanFileReader):
         self.fileName = fileName
