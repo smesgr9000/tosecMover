@@ -96,7 +96,6 @@ class StrategyScanCompressed(StrategyScan):
                     self.doStrategyNoMatch(scan)
                 else:
                     self.doStrategyMatch(scan, match)
-             return
         finally:
             zip.close()
         self.doStrategyNoMatch(entry)
