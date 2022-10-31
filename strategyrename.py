@@ -6,6 +6,8 @@ from scanfile import PlainFileReader, ScanFile
 from strategy import Strategy
 from tosecdat import TosecGameRom
 import logging
+import os
+import stat
 
 class Matcher:
     """
@@ -35,11 +37,12 @@ class StrategyRename(Strategy):
     - target files already exists and it not identical -> move is skiped
     - several target files and move of first worked -> softlink other targets to first target"""
 
-    def __init__(self, destPath: Path, matcher: Matcher, delDupes: bool):
+    def __init__(self, destPath: Path, matcher: Matcher, delDupes: bool, noWritePermission: bool):
         super().__init__()
         self.__destPath = destPath
         self.__matcher = matcher
         self.__delDupes = delDupes
+        self.__noWritePermission = noWritePermission
     
     def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> ScanFile:
         super().doStrategyMatch(scanFile, tosecRomMatches)
@@ -77,8 +80,10 @@ class StrategyRename(Strategy):
         else:
             logging.info("rename file %s to %s", cDim(scanFile.fileName.as_posix()), cDim(destFile.as_posix()))
             scanFile.fileName.rename(destFile)
+            if self.__noWritePermission:
+                self.removeWritePermission(destFile)
             return True
-            
+
     def handleDestFound(self, scanFile: ScanFile, destFile: Path, tosecRomMatch: TosecGameRom, deleteDups: bool):
         scanDest = ScanFile(PlainFileReader(destFile))
         matchDests = self.__matcher.findMatch(scanDest)
@@ -93,3 +98,7 @@ class StrategyRename(Strategy):
             for matchDest in matchDests:
                 logging.warning("duplicate file found %s for matching ROM %s. Source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
         return True
+
+    def removeWritePermission(self, destFile: Path):
+        currentPermission = stat.S_IMODE(os.lstat(destFile).st_mode)
+        os.chmod(destFile, currentPermission & (~stat.S_IWUSR) & (~stat.S_IWGRP) & (~stat.S_IWOTH))

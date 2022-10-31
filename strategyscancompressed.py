@@ -4,7 +4,9 @@ from pathlib import Path
 from scanfile import *
 from strategyrename import Matcher
 from strategyscan import StrategyScan
+import copy
 import logging
+import os
 import zipfile
 
 class ZipFileReader(IScanFileReader):
@@ -42,16 +44,17 @@ class ZipFileReader(IScanFileReader):
         return self.__archive.filename + '/' + self.__zipInfo.filename
 
     def rename(self, destFile: Path):
-        self.__archive.extract(self.__zipInfo, destFile)
+        data = self.__archive.read(self.__zipInfo)
+        destFile.write_bytes(data)
         # TODO remove file from archive currently not supported by 
         # Python see https://github.com/python/cpython/pull/19358
         # either wait for that MR or after complete file is scaned
         # delete the complete zip or create new zip and move over all left over files
-        logging.warning("Moving a zip entry is not supported right now. File is only extracted %s", cDIM(self.as_posix()))
+        logging.warning("Moving a zip entry is not supported right now. File is only extracted %s", cDim(self.as_posix()))
 
     def unlink(self):
         # TODO See rename
-        logging.warning("Deleting a zip entry is not supported right now. File Skipped %s", cDIM(self.as_posix()))
+        logging.warning("Deleting a zip entry is not supported right now. File Skipped %s", cDim(self.as_posix()))
 
 class StrategyScanCompressed(StrategyScan):
     """
@@ -96,6 +99,8 @@ class StrategyScanCompressed(StrategyScan):
                     self.doStrategyNoMatch(scan)
                 else:
                     self.doStrategyMatch(scan, match)
+            return
         finally:
             zip.close()
-        self.doStrategyNoMatch(entry)
+        scan = ScanFile(PlainFileReader(entry))
+        self.doStrategyNoMatch(scan)

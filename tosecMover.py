@@ -114,7 +114,7 @@ class Tosec:
             if not destPath.is_dir():
                 logging.error("destination %s is not a directory", cDim(args.destDir))
                 return
-            strategy = StrategyRename(destPath, self.__matcher, args.delDupes)
+            strategy = StrategyRename(destPath, self.__matcher, args.delDupes, args.noWritePermission)
             if args.diag:
                 strategy = strategy.doChain(StrategyDiag(args.noMissing, args.noHaving))
         else:
@@ -143,6 +143,7 @@ parser.add_argument("--delDupes", action="store_true", help="Delete duplicates f
 parser.add_argument("--diag", action="store_true", help="Also print diagnostic information when scanning source directory. This is always enabled if source is not given")
 parser.add_argument("--noHaving", action="store_true", help="If in diagnostic mode don't print 'Having' files")
 parser.add_argument("--noMissing", action="store_true", help="If in diagnostic mode don't print 'Missing' files")
+parser.add_argument("--noWritePermission", action="store_true", help="remove write permission on a renamed file")
 parser.add_argument("tosec", help="filename of TOSEC DAT file or directory to process")
 parser.add_argument("--source", help="source file or directory to scan")
 parser.add_argument("-r", action="store_true", dest="recursive", help="source dictonary is scaned recursively")
