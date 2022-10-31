@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from color import *
+from color import cDim
 from pathlib import Path
 from scanfile import PlainFileReader, ScanFile
 from strategy import Strategy
@@ -12,19 +12,22 @@ import stat
 class Matcher:
     """
     Search files in the given ROM list. May return a list of TOSEC rom entries matching
-    the file or None if no match could be found. Only accept matches with SHA1, MD5, size & CRC equal the TOSEC entry"""
-    
+    the file or None if no match could be found.
+    Only accept matches with SHA1, MD5, size & CRC equal the TOSEC entry"""
+
     def __init__(self, romList: dict):
         self.__romList = romList
 
     def findMatch(self, scanFile: ScanFile) -> list[TosecGameRom]:
         if scanFile.isLoaded:
             if scanFile.sha1 in self.__romList:
-                entry = self.__romList[scanFile.sha1];
-                logging.debug("found file %s as ROM %s", cDim(scanFile.fileName.as_posix()), cDim(entry[0].name));
+                entry = self.__romList[scanFile.sha1]
+                logging.debug("found file %s as ROM %s",
+                    cDim(scanFile.fileName.as_posix()), cDim(entry[0].name))
                 if entry[0].isMatching(scanFile):
                     return entry
-                logging.error("file %s matching sha1 but not other values for entry %s", cDim(vars(scanFile)), cDim(vars(entry)))
+                logging.error("file %s matching sha1 but not other values for entry %s",
+                    cDim(vars(scanFile)), cDim(vars(entry)))
         return None
 
 class StrategyRename(Strategy):
@@ -43,7 +46,7 @@ class StrategyRename(Strategy):
         self.__matcher = matcher
         self.__delDupes = delDupes
         self.__noWritePermission = noWritePermission
-    
+
     def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> ScanFile:
         super().doStrategyMatch(scanFile, tosecRomMatches)
         destFile = tosecRomMatches[0].getFileName(self.__destPath)
@@ -55,7 +58,8 @@ class StrategyRename(Strategy):
                 self.softLink(scanFile, otherDestFile, destFile, rom)
             return ScanFile(PlainFileReader(destFile))
         elif len(tosecRomMatches) > 1:
-            logging.warning("other entries found for %s skipped due to previous error", cDim(tosecRomMatches[0].name))
+            logging.warning("other entries found for %s skipped due to previous error",
+                cDim(tosecRomMatches[0].name))
         return None
 
     def createParentDirectories(self, destFile: Path):
@@ -77,26 +81,28 @@ class StrategyRename(Strategy):
             destFile.unlink()
         if destFile.exists():
             return self.handleDestFound(scanFile, destFile, tosecRomMatch, self.__delDupes)
-        else:
-            logging.info("rename file %s to %s", cDim(scanFile.fileName.as_posix()), cDim(destFile.as_posix()))
-            scanFile.fileName.rename(destFile)
-            if self.__noWritePermission:
-                self.removeWritePermission(destFile)
-            return True
+        logging.info("rename file %s to %s", cDim(scanFile.fileName.as_posix()), cDim(destFile.as_posix()))
+        scanFile.fileName.rename(destFile)
+        if self.__noWritePermission:
+            self.removeWritePermission(destFile)
+        return True
 
     def handleDestFound(self, scanFile: ScanFile, destFile: Path, tosecRomMatch: TosecGameRom, deleteDups: bool):
         scanDest = ScanFile(PlainFileReader(destFile))
         matchDests = self.__matcher.findMatch(scanDest)
         if matchDests is None:
-            logging.error("in destination directory file %s was found but does not match ROM it should have. File %s ignored", cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
+            logging.error("in destination directory file %s was found but does not match ROM it should have. File %s ignored",
+                cDim(destFile.as_posix()), cDim(scanFile.fileName.as_posix()))
             return False
         if deleteDups:
             for matchDest in matchDests:
-                logging.warning("delete Duplicate file %s for matching ROM %s", cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
+                logging.warning("delete Duplicate file %s for matching ROM %s",
+                    cDim(scanFile.fileName.as_posix()), cDim(matchDest.name))
             scanFile.fileName.unlink()
         else:
             for matchDest in matchDests:
-                logging.warning("duplicate file found %s for matching ROM %s. Source file %s ignored", cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
+                logging.warning("duplicate file found %s for matching ROM %s. Source file %s ignored",
+                    cDim(destFile.as_posix()), cDim(matchDest.name), cDim(scanFile.fileName.as_posix()))
         return True
 
     def removeWritePermission(self, destFile: Path):

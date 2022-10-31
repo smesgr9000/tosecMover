@@ -27,7 +27,7 @@ class Strategy:
         return listPath
 
     def doStrategyMatch(self, scanFile: ScanFile, tosecRomMatches: list[TosecGameRom]) -> ScanFile:
-        """ 
+        """
         Process found matching TOSEC entries
         @param scanFile
             the file was scaned and caused the match
@@ -48,7 +48,7 @@ class Strategy:
 
         if self.chain is not None:
             self.chain.doStrategyNoMatch(scanFile)
-    
+
     def doFinal(self):
         """
         Scan has ended"""

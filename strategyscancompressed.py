@@ -1,12 +1,10 @@
 #!/usr/bin/python
 
+from color import cDim
 from pathlib import Path
-from scanfile import *
-from strategyrename import Matcher
+from scanfile import PlainFileReader, IScanFileReader, ScanFile
 from strategyscan import StrategyScan
-import copy
 import logging
-import os
 import zipfile
 
 class ZipFileReader(IScanFileReader):
@@ -46,28 +44,27 @@ class ZipFileReader(IScanFileReader):
     def rename(self, destFile: Path):
         data = self.__archive.read(self.__zipInfo)
         destFile.write_bytes(data)
-        # TODO remove file from archive currently not supported by 
+        # TODO remove file from archive currently not supported by
         # Python see https://github.com/python/cpython/pull/19358
         # either wait for that MR or after complete file is scaned
         # delete the complete zip or create new zip and move over all left over files
-        logging.warning("Moving a zip entry is not supported right now. File is only extracted %s", cDim(self.as_posix()))
+        logging.warning("Moving a zip entry is not supported right now. File is only extracted %s",
+            cDim(self.as_posix()))
 
     def unlink(self):
         # TODO See rename
-        logging.warning("Deleting a zip entry is not supported right now. File Skipped %s", cDim(self.as_posix()))
+        logging.warning("Deleting a zip entry is not supported right now. File Skipped %s",
+            cDim(self.as_posix()))
 
 class StrategyScanCompressed(StrategyScan):
     """
     Strategy to scan every directory/files from the source directory.
-    If a directory is found the content is retruned. 
+    If a directory is found the content is retruned.
     Otherwise the file is checked. If Matcher does not match and file is a
     ZIP archive every entry of the ZIP archive is scaned.
     For each found entry either doStrategyMatch or doStrategyNoMatch is called.
     doStrategyNoMatch is called for the ZIP archive if the ZIP has either no
     entry or an error occurs while processing the ZIP archive."""
-
-    def __init__(self, matcher: Matcher):
-        super().__init__(matcher)
 
     def _scanFile(self, entry: Path):
         scan = ScanFile(PlainFileReader(entry))
@@ -75,16 +72,16 @@ class StrategyScanCompressed(StrategyScan):
         if match is None:
             if zipfile.is_zipfile(entry):
                 self.__scanZipFile(entry)
-            else:    
+            else:
                 self.doStrategyNoMatch(scan)
         else:
             self.doStrategyMatch(scan, match)
 
     def __scanZipFile(self, entry: Path):
         logging.debug("scan zip file %s", cDim(entry.as_posix()))
-        zip = zipfile.ZipFile(entry)
+        zipFile = zipfile.ZipFile(entry)
         try:
-            infoList = zip.infolist()
+            infoList = zipFile.infolist()
             if len(infoList) == 0:
                 self.doStrategyNoMatch(entry)
                 return
@@ -93,7 +90,7 @@ class StrategyScanCompressed(StrategyScan):
                 if info.is_dir():
                     continue
                 logging.debug("scan zip file entry %s", cDim(info.filename))
-                scan = ScanFile(ZipFileReader(zip, info))
+                scan = ScanFile(ZipFileReader(zipFile, info))
                 match = self._matcher.findMatch(scan)
                 if match is None:
                     self.doStrategyNoMatch(scan)
@@ -101,6 +98,6 @@ class StrategyScanCompressed(StrategyScan):
                     self.doStrategyMatch(scan, match)
             return
         finally:
-            zip.close()
+            zipFile.close()
         scan = ScanFile(PlainFileReader(entry))
         self.doStrategyNoMatch(scan)

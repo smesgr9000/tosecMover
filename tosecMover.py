@@ -2,7 +2,6 @@
 
 from pathlib import Path
 from color import *
-from strategy import Strategy
 from strategydiag import StrategyDiag
 from strategyrename import StrategyRename, Matcher
 from strategyscan import StrategyScan
@@ -16,7 +15,7 @@ class Tosec:
     """
     Tosec scanner. On init read all TOSEC DATs found in the given directory
     or the single file.
-    The class will scan the given directores and either rename or diagnosis 
+    The class will scan the given directores and either rename or diagnosis
     the result depending on the given arguments."""
 
     def __init__(self, tosecDir: str):
@@ -28,7 +27,7 @@ class Tosec:
         if not tosecPath.is_dir():
             romList = self.__readTosecFile(tosecPath)
         else:
-            romList = dict()
+            romList = {}
             for tosecEntry in tosecPath.iterdir():
                 if not tosecEntry.is_dir():
                     newRomList = self.__readTosecFile(tosecEntry)
@@ -38,27 +37,30 @@ class Tosec:
     def __readTosecFile(self, tosecFile: Path) -> dict:
         """
         Reads a single TOSEC DAT file. Returns a dictonary of all ROM entries
-        of the DAT file. If a ROM is found several times in the DAT the complete 
+        of the DAT file. If a ROM is found several times in the DAT the complete
         game entry is skipped."""
 
-        fileRomList = dict()
+        fileRomList = {}
         try:
             root = xml.etree.ElementTree.parse(tosecFile.as_posix()).getroot()
             gameList = []
             header = TosecHeader(root)
             for game in root.findall("game"):
                 try:
-                    entry = TosecGameEntry(game, header);
+                    entry = TosecGameEntry(game, header)
                     gameRomList = self.__createGameEntryRomList(entry, fileRomList)
                     gameList.append(entry)
                     self.__joinRomLists(fileRomList, gameRomList)
                 except InvalidTosecFileException as exception:
-                    logging.warning("TOSEC DAT file %s parser error. Entry skipped because: %s", cDim(tosecFile.as_posix()), exception)
-            logging.info("TOSEC DAT file %s loaded %s entries with %s roms", cDim(tosecFile.as_posix()), len(gameList), len(fileRomList))
+                    logging.warning("TOSEC DAT file %s parser error. Entry skipped because: %s",
+                        cDim(tosecFile.as_posix()), exception)
+            logging.info("TOSEC DAT file %s loaded %s entries with %s roms",
+                cDim(tosecFile.as_posix()), len(gameList), len(fileRomList))
             header.games = gameList
             header.roms = fileRomList
         except (InvalidTosecFileException, xml.etree.ElementTree.ParseError) as exception:
-            logging.warning("TOSEC DAT file %s parser error. File skipped because: %s", cDim(tosecFile.as_posix()), exception)
+            logging.warning("TOSEC DAT file %s parser error. File skipped because: %s",
+                cDim(tosecFile.as_posix()), exception)
         return fileRomList
 
     def __createGameEntryRomList(self, entry: TosecGameEntry, romList: dict) -> dict:
@@ -68,8 +70,8 @@ class Tosec:
         in the database. Will throw an exception if all ROMs of at least another game entries is identical
         Otherwise a dict of sha1 ROMs is returned."""
 
-        dups = dict()
-        gameRomList = dict()
+        dups = {}
+        gameRomList = {}
         for rom in entry.roms:
             if rom.sha1 in romList:
                 for gameEntry in romList[rom.sha1]:
@@ -84,7 +86,8 @@ class Tosec:
             if len(dups) > 0:
                 sha1s = ', '.join(str(rom.sha1) for rom in entry.roms)
                 games = ', '.join(str(dup.name) for dup in dups.keys())
-                logging.debug("All Game ROMs %s of with sha1 %s were already added in other game %s", cDim(entry.name), cDim(sha1s), cDim(games))
+                logging.debug("All Game ROMs %s of with sha1 %s were already added in other game %s",
+                    cDim(entry.name), cDim(sha1s), cDim(games))
                 raise InvalidTosecFileException("All Game ROMs {} were already added in other game {}".format(cDim(entry.name), cDim(games)))
         return gameRomList
 
@@ -98,7 +101,12 @@ class Tosec:
             rom0 = rom[0]
             if entryKey in romList:
                 existingEntry = romList[entryKey][0]
-                logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s", cDim(existingEntry.game.header.name + "/" + existingEntry.name), cDim(entryKey), existingEntry.md5 == rom0.md5, existingEntry.size == rom0.size, cDim(rom0.game.header.name + "/" + rom0.name));
+                logging.info("TOSEC file %s with same sha1 %s and matching {md5=%s size=%s} already found in other TOSEC file %s",
+                    cDim(existingEntry.game.header.name + "/" + existingEntry.name),
+                    cDim(entryKey),
+                    existingEntry.md5 == rom0.md5,
+                    existingEntry.size == rom0.size,
+                    cDim(rom0.game.header.name + "/" + rom0.name))
                 if existingEntry.md5 == rom0.md5 and existingEntry.size == rom0.size and existingEntry.crc == rom0.crc:
                     romList[entryKey].extend(rom)
             else:

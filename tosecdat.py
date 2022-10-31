@@ -1,17 +1,18 @@
 #!/usr/bin/python
 
-from color import *
+from color import cDim
 from pathlib import Path
 from scanfile import ScanFile
 import logging
 import xml.etree.ElementTree
 
 class InvalidTosecFileException(Exception):
-    pass
+    """
+    Exception if file processed isn't a valid TOSEC file"""
 
 class TosecHeader:
     """
-    TOSEC DAT file Header. 
+    TOSEC DAT file Header.
     On init the given XML tree is scaned for header and header/name.
     If XML elements aren't found an exception is raised """
 
@@ -23,7 +24,7 @@ class TosecHeader:
         if name is None:
             raise InvalidTosecFileException("no datafile/header/name found")
         self.games = []
-        self.roms = dict()
+        self.roms = {}
         self.name = name.text
         splitName = self.name.split(" - ", 1)
         self.system = splitName[0]
@@ -53,17 +54,17 @@ class TosecGameRom:
             raise InvalidTosecFileException("no {} found for ROM {}".format(cDim("datafile/game/rom{sha1}"), cDim(self.name)))
 
     def isMatching(self, scanFile: ScanFile) -> bool:
-        """ 
+        """
         Compare the given scanFile to the internal ROM entry.
-        @param scanFile 
+        @param scanFile
             file to compare to the TOSEC DAT ROM entry
-        @return 
+        @return
             true if all criteria match, false otherwise"""
 
         return scanFile is not None and self.md5 == scanFile.md5 and self.crc == scanFile.crc and self.size == str(scanFile.size)
 
     def getFileName(self, basePath: Path) -> Path:
-        """ 
+        """
         Get the file path for the ROM entry based on the given base path
         the file path has the following structure <base>/<system>[/<category>][/<game>]/<rom>.
         If TOSEC header has no category the hirachie level is skipped.
@@ -77,7 +78,7 @@ class TosecGameRom:
         return self.game.getPathName(basePath) / self.name
 
 class TosecGameEntry:
-    """ 
+    """
     TOSEC DAT Game entry.
     On init the XML element is parsed. One Game entry must have at least one ROM
     but can have unlimited ROM files.
@@ -98,7 +99,7 @@ class TosecGameEntry:
         logging.debug("parsed game entry %s", cDim(self.name))
 
     def getPathName(self, basePath: Path) -> Path:
-        """ 
+        """
         Get the path for the game entry based on the given base path
         the path has the following structure <base>/<system>[/<category>][/<game>]/.
         If TOSEC header has no category the hirachie level is skipped.
