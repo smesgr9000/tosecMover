@@ -146,7 +146,7 @@ class Tosec:
             strategy.doFinal()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--loglevel", choices=["error", "warning", "info", "debug"], default="warning", help="Loglevel for the programm")
+parser.add_argument("--loglevel", choices=["error", "warning", "info", "debug"], default="warning", help="Loglevel for the programm. debug - very verbose. error - only important messages")
 parser.add_argument("--delDupes", action="store_true", help="Delete duplicates found in source directory")
 parser.add_argument("--diag", action="store_true", help="Also print diagnostic information when scanning source directory. This is always enabled if source is not given")
 parser.add_argument("--noHaving", action="store_true", help="If in diagnostic mode don't print 'Having' files")
@@ -154,8 +154,8 @@ parser.add_argument("--noMissing", action="store_true", help="If in diagnostic m
 parser.add_argument("--noWritePermission", action="store_true", help="remove write permission on a renamed file")
 parser.add_argument("tosec", help="filename of TOSEC DAT file or directory to process")
 parser.add_argument("--source", help="source file or directory to scan")
-parser.add_argument("-r", action="store_true", dest="recursive", help="source dictonary is scaned recursively")
-parser.add_argument("-x", action="store_true", dest="scanCompressed", help="compressed files in source dictonary is scaned. Supported file formats is ZIP. Experimental file is not moved only extracted")
+parser.add_argument("-r", action="store_true", dest="recursive", help="source directory is scaned recursively")
+parser.add_argument("-x", action="store_true", dest="scanCompressed", help="compressed files in source directory is scaned. Supported file formats is ZIP. **Experimental** file is not only extracted but not moved")
 parser.add_argument("dest", help="destination directory to move found files. If no source is given the directory is scaned without moving")
 
 args = parser.parse_args()
