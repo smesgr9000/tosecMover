@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
 from pathlib import Path
-from color import *
+from color import cDim
 from strategydiag import StrategyDiag
 from strategyrename import StrategyRename, Matcher
 from strategyscan import StrategyScan
 from strategyscancompressed import StrategyScanCompressed
-from tosecdat import *
+from tosecdat import InvalidTosecFileException, TosecGameEntry, TosecHeader
 import argparse
 import logging
 import xml.etree.ElementTree
@@ -88,7 +88,7 @@ class Tosec:
                 games = ', '.join(str(dup.name) for dup in dups.keys())
                 logging.debug("All Game ROMs %s of with sha1 %s were already added in other game %s",
                     cDim(entry.name), cDim(sha1s), cDim(games))
-                raise InvalidTosecFileException("All Game ROMs {} were already added in other game {}".format(cDim(entry.name), cDim(games)))
+                raise InvalidTosecFileException(f"All Game ROMs {cDim(entry.name)} were already added in other game {cDim(games)}")
         return gameRomList
 
     def __joinRomLists(self, romList: dict, concatList: dict):
@@ -112,23 +112,23 @@ class Tosec:
             else:
                 romList[entryKey] = rom
 
-    def scanDirectory(self, args: argparse.Namespace):
-        if args.source is not None:
-            scanPath = Path(args.source).resolve()
-            destPath = Path(args.dest).resolve()
+    def scanDirectory(self, params: argparse.Namespace):
+        if params.source is not None:
+            scanPath = Path(params.source).resolve()
+            destPath = Path(params.dest).resolve()
             if not destPath.exists():
-                logging.error("destination directory %s does not exists", cDim(args.dest))
+                logging.error("destination directory %s does not exists", cDim(params.dest))
                 return
             if not destPath.is_dir():
-                logging.error("destination %s is not a directory", cDim(args.destDir))
+                logging.error("destination %s is not a directory", cDim(params.destDir))
                 return
-            strategy = StrategyRename(destPath, self.__matcher, args.delDupes, args.noWritePermission)
-            if args.diag:
-                strategy = strategy.doChain(StrategyDiag(args.noMissing, args.noHaving))
+            strategy = StrategyRename(destPath, self.__matcher, params.delDupes, params.noWritePermission)
+            if params.diag:
+                strategy = strategy.doChain(StrategyDiag(params.noMissing, params.noHaving))
         else:
-            scanPath = Path(args.dest).resolve()
-            strategy = StrategyDiag(args.noMissing, args.noHaving)
-        if args.scanCompressed:
+            scanPath = Path(params.dest).resolve()
+            strategy = StrategyDiag(params.noMissing, params.noHaving)
+        if params.scanCompressed:
             strategy = strategy.doChain(StrategyScanCompressed(self.__matcher))
         else:
             strategy = strategy.doChain(StrategyScan(self.__matcher))
@@ -140,7 +140,7 @@ class Tosec:
             while True:
                 startPaths = scanPaths
                 scanPaths = strategy.doStrategyScan(scanPaths)
-                if not args.recursive or len(scanPaths) <= 0 or startPaths == scanPaths:
+                if not params.recursive or len(scanPaths) <= 0 or startPaths == scanPaths:
                     break
         finally:
             strategy.doFinal()

@@ -110,9 +110,9 @@ class TosecGameEntry:
         @return
             path to the game entry directory"""
 
-        p = basePath / self.header.system
+        path = basePath / self.header.system
         if self.header.category is not None:
-            p /= self.header.category
+            path /= self.header.category
         if len(self.roms) > 1:
-            return p / self.fileName
-        return p
+            return path / self.fileName
+        return path

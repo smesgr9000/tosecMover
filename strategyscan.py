@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
+from color import cDim
 from pathlib import Path
-from scanfile import *
+from scanfile import PlainFileReader, ScanFile
 from strategyrename import Matcher
 from strategy import Strategy
 import logging

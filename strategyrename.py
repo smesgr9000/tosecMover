@@ -57,7 +57,7 @@ class StrategyRename(Strategy):
                 self.createParentDirectories(otherDestFile)
                 self.softLink(scanFile, otherDestFile, destFile, rom)
             return ScanFile(PlainFileReader(destFile))
-        elif len(tosecRomMatches) > 1:
+        if len(tosecRomMatches) > 1:
             logging.warning("other entries found for %s skipped due to previous error",
                 cDim(tosecRomMatches[0].name))
         return None
