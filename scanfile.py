@@ -42,6 +42,9 @@ class PlainFileReader(IScanFileReader):
         self.__file = None
         self.name = self.__fileName.name
 
+    def __repr__(self):
+        return str(self.__fileName.name)
+
     def open(self):
         if self.__file is not None:
             logging.warning("file is already open %s", cDim(self.__fileName.as_posix()))
