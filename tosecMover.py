@@ -155,7 +155,7 @@ parser.add_argument("--noWritePermission", action="store_true", help="remove wri
 parser.add_argument("tosec", help="filename of TOSEC DAT file or directory to process")
 parser.add_argument("--source", help="source file or directory to scan")
 parser.add_argument("-r", action="store_true", dest="recursive", help="source directory is scaned recursively")
-parser.add_argument("-x", action="store_true", dest="scanCompressed", help="compressed files in source directory is scaned. Supported file formats is ZIP. **Experimental** file is not only extracted but not moved")
+parser.add_argument("-x", action="store_true", dest="scanCompressed", help="compressed files in source directory is scaned. Supported file formats is ZIP. **Experimental** file is only extracted but not moved")
 parser.add_argument("dest", help="destination directory to move found files. If no source is given the directory is scaned without moving")
 
 args = parser.parse_args()
