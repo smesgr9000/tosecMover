@@ -27,7 +27,7 @@ class Matcher:
                 if entry[0].isMatching(scanFile):
                     return entry
                 logging.error("file %s matching sha1 but not other values for entry %s",
-                    cDim(vars(scanFile)), cDim(vars(entry)))
+                    cDim(scanFile.fileName.as_posix()), cDim(entry[0].name))
         return None
 
 class StrategyRename(Strategy):
