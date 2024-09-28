@@ -5,6 +5,7 @@ from pathlib import Path
 import binascii
 import hashlib
 import logging
+import shutil
 
 class IScanFileReader:
     """
@@ -68,7 +69,7 @@ class PlainFileReader(IScanFileReader):
         return self.__fileName.as_posix()
 
     def rename(self, destFile: Path):
-        self.__fileName.rename(destFile)
+        shutil.move(self.__fileName, destFile)
 
     def unlink(self):
         self.__fileName.unlink()

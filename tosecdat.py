@@ -114,5 +114,5 @@ class TosecGameEntry:
         if self.header.category is not None:
             path /= self.header.category
         if len(self.roms) > 1:
-            return path / self.fileName
+            return path / self.name
         return path
